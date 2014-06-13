@@ -1,0 +1,2 @@
+prune *
+recursive-include tornado_eventsource *.py
