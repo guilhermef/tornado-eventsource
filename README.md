@@ -30,6 +30,16 @@ On your handler:
 
 \o/ stream all the things!
 
+Contribute
+----------
+
+    make setup
+
+    change things
+
+    make test
+
+    pull request ;)
 
 License
 -------
