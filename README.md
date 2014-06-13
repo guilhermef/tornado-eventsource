@@ -4,6 +4,8 @@ tornado-eventsource
 A simple EventSource handler for tornado.
 With a built-in client for testing.
 
+[EventSource on MDN](https://developer.mozilla.org/en-US/docs/Server-sent_events/Using_server-sent_events)
+
 How to use
 ----------
 
