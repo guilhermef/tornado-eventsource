@@ -3,7 +3,7 @@
 
 
 from tests import EventSourceTestCase
-from tests.util.event_source_client import eventsource_connect
+from tornado_eventsource.event_source_client import eventsource_connect
 from tornado.websocket import websocket_connect
 from tornado.iostream import StreamClosedError
 from tornado.testing import gen_test
