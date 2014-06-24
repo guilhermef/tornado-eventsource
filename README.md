@@ -1,6 +1,8 @@
 tornado-eventsource
 ===================
 
+[![Dependency Status](https://gemnasium.com/guilhermef/tornado-eventsource.svg)](https://gemnasium.com/guilhermef/tornado-eventsource)
+
 A simple EventSource handler for tornado.
 With a built-in client for testing.
 
