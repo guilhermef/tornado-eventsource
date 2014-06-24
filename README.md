@@ -2,6 +2,7 @@ tornado-eventsource
 ===================
 
 [![Dependency Status](https://gemnasium.com/guilhermef/tornado-eventsource.svg)](https://gemnasium.com/guilhermef/tornado-eventsource)
+[![Build Status](https://travis-ci.org/guilhermef/tornado-eventsource.svg?branch=master)](https://travis-ci.org/guilhermef/tornado-eventsource)
 
 A simple EventSource handler for tornado.
 With a built-in client for testing.
