@@ -33,6 +33,20 @@ On your handler:
 
 \o/ stream all the things!
 
+Using the client for test:
+
+    from tornado_eventsource.event_source_client import eventsource_connect
+
+    ...
+
+    @gen_test
+    def test_get_message_on_open(self):
+        event_source = eventsource_connect(url=self.get_url('/'), callback=self.stop)
+        self.wait()
+        event = event_source.result().events[0]
+        self.assertEqual(event.name, 'doge_source')
+        self.assertEqual(event.data, 'much connection')
+
 Contribute
 ----------
 
