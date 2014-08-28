@@ -5,6 +5,7 @@ import tornado.web
 from tornado.iostream import StreamClosedError
 import logging
 
+
 class EventSourceHandler(tornado.web.RequestHandler):
 
     def __init__(self, application, request, **kwargs):
@@ -46,7 +47,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
         try:
             self.stream.write(tornado.escape.utf8(message))
         except StreamClosedError:
-            logging.exception()
+            logging.exception('Stream Closed')
             self.close()
 
     def write_message(self, name, msg=True, wait=None):
@@ -56,7 +57,6 @@ class EventSourceHandler(tornado.web.RequestHandler):
         to_send += """\nevent: {name}\ndata: {msg}\n""".format(name=name, msg=msg)
         logging.debug(to_send)
         self._write(to_send)
-
 
     def on_connection_close(self):
         self.stream.close()
