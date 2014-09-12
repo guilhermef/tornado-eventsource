@@ -44,6 +44,8 @@ class EventSourceHandler(tornado.web.RequestHandler):
         pass
 
     def _write(self, message):
+        if self.stream.closed():
+            return
         try:
             self.stream.write(tornado.escape.utf8(message))
         except StreamClosedError:
