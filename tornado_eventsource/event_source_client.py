@@ -13,6 +13,11 @@ from tornado.concurrent import TracebackFuture
 from tornado.netutil import Resolver
 from tornado.escape import native_str
 
+
+class EventSourceError(Exception):
+    pass
+
+
 class Event(object):
     """
     Contains a received event to be processed
@@ -24,7 +29,8 @@ class Event(object):
         self.retry = None
 
     def __repr__(self):
-        return "Event<%s,%s,%s>" % (str(self.id), str(self.name), str(self.data.replace("\n","\\n")))
+        return "Event<%s,%s,%s>" % (str(self.id), str(self.name), str(self.data.replace("\n", "\\n")))
+
 
 class EventSourceClient(simple_httpclient._HTTPConnection):
     """
@@ -41,7 +47,6 @@ class EventSourceClient(simple_httpclient._HTTPConnection):
             io_loop, None, request, lambda: None, self._on_http_response,
             104857600, self.resolver)
 
-
     def _handle_event_stream(self):
         if self._timeout is not None:
             self.io_loop.remove_timeout(self._timeout)
@@ -54,7 +59,7 @@ class EventSourceClient(simple_httpclient._HTTPConnection):
             if response.error:
                 self.connect_future.set_exception(response.error)
             else:
-                self.connect_future.set_exception(WebSocketError(
+                self.connect_future.set_exception(EventSourceError(
                     "Non-websocket response"))
 
     def _on_headers(self, data):
@@ -74,9 +79,6 @@ class EventSourceClient(simple_httpclient._HTTPConnection):
                     raise ValueError("Multiple unequal Content-Lengths: %r" %
                                      self.headers["Content-Length"])
                 self.headers["Content-Length"] = pieces[0]
-            content_length = int(self.headers["Content-Length"])
-        else:
-            content_length = None
 
         self._handle_event_stream()
 
@@ -109,15 +111,16 @@ class EventSourceClient(simple_httpclient._HTTPConnection):
                 try:
                     self.retry_timeout = int(value)
                     event.retry = self.retry_timeout
-                    logging.info( "timeout reset: %s" % (value,) )
+                    logging.info("timeout reset: %s" % (value,))
                 except ValueError:
                     pass
             elif field == "":
-                logging.debug( "received comment: %s" % (value,) )
+                logging.debug("received comment: %s" % (value,))
             else:
                 raise Exception("Unknown field !")
         if event.name is not None:
             self.events.append(event)
+
 
 def eventsource_connect(url, io_loop=None, callback=None, connect_timeout=None):
     """Client-side eventsource support.

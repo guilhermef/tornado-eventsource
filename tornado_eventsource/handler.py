@@ -27,17 +27,18 @@ class EventSourceHandler(tornado.web.RequestHandler):
         if not self.check_connection():
             return
 
-        self.open_args = args
-        self.open_kwargs = kwargs
+        self.open_args = [self.decode_argument(arg) for arg in args]
+        self.open_kwargs = dict((k, self.decode_argument(v, name=k))
+                                for (k, v) in kwargs.items())
 
         # EventSource only supports GET method
         if self.request.method != 'GET':
             return self.error(405, 'Method Not Allowed')
         self._write("HTTP/1.1 200 OK\r\ncontent-type: text/event-stream\r\naccess-control-allow-origin: *\r\nconnection: keep-alive\r\n\r\n")
 
-        self.open()
+        self.open(*self.open_args, **self.open_kwargs)
 
-    def open(self):
+    def open(self, *args, **kwargs):
         pass
 
     def close(self):

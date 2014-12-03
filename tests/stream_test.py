@@ -4,11 +4,11 @@
 
 from tests import EventSourceTestCase
 from tornado_eventsource.event_source_client import eventsource_connect
-from tornado.websocket import websocket_connect
 from tornado.iostream import StreamClosedError
 from tornado.testing import gen_test
 
 from mock import patch
+
 
 class PostMessageTest(EventSourceTestCase):
 
@@ -49,3 +49,10 @@ class PostMessageTest(EventSourceTestCase):
         self.assertEqual(event.data, 'such Wow')
         self.assertEqual(event.retry, 300)
 
+    @gen_test
+    def test_get_message_with_url_params(self):
+        event_source = eventsource_connect(url=self.get_url('/param/42'), callback=self.stop)
+        self.wait()
+        event = event_source.result().events[0]
+        self.assertEqual(event.name, 'doge_source')
+        self.assertEqual(event.data, 'such Wow 42')
