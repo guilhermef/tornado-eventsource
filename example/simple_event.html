@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Simple Event</title>
+
+  <script>
+    var evtSource = new EventSource("http://localhost:8888/");
+    evtSource.onmessage = function(e) {
+      console.log(e.lastEventId);
+      console.log(e.data);
+    };
+    evtSource.addEventListener("doge", function(e) {
+      console.log(e);
+    }, false);
+  </script>
+</head>
+<body>
+
+</body>
+</html>

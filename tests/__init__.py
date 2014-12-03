@@ -27,6 +27,16 @@ class EventSourceTestHandlerWithUrlParam(EventSourceHandler):
         self.write_message('doge_source', 'such Wow %s' % param)
 
 
+class EventSourceTestHandlerWithoutName(EventSourceHandler):
+    def open(self):
+        self.write_message(msg='such Wow')
+
+
+class EventSourceTestHandlerWithMultilineMessage(EventSourceHandler):
+    def open(self):
+        self.write_message(msg='such Wow\nmuch multi')
+
+
 class EventSourceTestCase(AsyncHTTPTestCase):
 
     def get_app(self):
@@ -35,4 +45,6 @@ class EventSourceTestCase(AsyncHTTPTestCase):
             (r'^/forbidden$', EventSourceTestHandlerWithCheckConnectionError),
             (r'^/retry$', EventSourceTestHandlerWithRetry),
             (r'^/param/(\d+)$', EventSourceTestHandlerWithUrlParam),
+            (r'^/no_name$', EventSourceTestHandlerWithoutName),
+            (r'^/multi_line$', EventSourceTestHandlerWithMultilineMessage),
         ])

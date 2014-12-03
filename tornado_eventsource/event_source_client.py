@@ -51,7 +51,7 @@ class EventSourceClient(simple_httpclient._HTTPConnection):
         if self._timeout is not None:
             self.io_loop.remove_timeout(self._timeout)
             self._timeout = None
-        self.stream.read_until_regex(b"data: .*\n", self.handle_stream)
+        self.stream.read_until_regex(b"\n\n", self.handle_stream)
         self.connect_future.set_result(self)
 
     def _on_http_response(self, response):
@@ -118,8 +118,7 @@ class EventSourceClient(simple_httpclient._HTTPConnection):
                 logging.debug("received comment: %s" % (value,))
             else:
                 raise Exception("Unknown field !")
-        if event.name is not None:
-            self.events.append(event)
+        self.events.append(event)
 
 
 def eventsource_connect(url, io_loop=None, callback=None, connect_timeout=None):

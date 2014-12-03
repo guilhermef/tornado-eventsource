@@ -56,3 +56,19 @@ class PostMessageTest(EventSourceTestCase):
         event = event_source.result().events[0]
         self.assertEqual(event.name, 'doge_source')
         self.assertEqual(event.data, 'such Wow 42')
+
+    @gen_test
+    def test_get_message_without_name(self):
+        event_source = eventsource_connect(url=self.get_url('/no_name'), callback=self.stop)
+        self.wait()
+        event = event_source.result().events[0]
+        self.assertEqual(event.name, None)
+        self.assertEqual(event.data, 'such Wow')
+
+    @gen_test
+    def test_get_message_with_multiline(self):
+        event_source = eventsource_connect(url=self.get_url('/multi_line'), callback=self.stop)
+        self.wait()
+        event = event_source.result().events[0]
+        self.assertEqual(event.name, None)
+        self.assertEqual(event.data, 'such Wow\nmuch multi')
