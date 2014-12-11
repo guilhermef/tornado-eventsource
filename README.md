@@ -31,7 +31,7 @@ On your handler:
         def close(self):
             # Cleanup after close
 
-\o/ stream all the things!
+[<img src="http://cdn.meme.am/instances/500x/57038109.jpg">](https://developer.mozilla.org/en-US/docs/Server-sent_events/Using_server-sent_events)
 
 Using the client for test:
 
