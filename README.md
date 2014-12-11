@@ -14,7 +14,7 @@ How to use
 
 Install it(duh!):
 
-    pip install tornado-eventsource
+    pip install tornado_eventsource
 
 On your handler:
 
