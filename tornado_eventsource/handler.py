@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import tornado.web
+import tornado.gen as gen
 from tornado.iostream import StreamClosedError
 import logging
 
@@ -23,6 +24,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
     def check_connection(self):
         return True
 
+    @gen.coroutine
     def _execute(self, transforms, *args, **kwargs):
         if not self.check_connection():
             return
