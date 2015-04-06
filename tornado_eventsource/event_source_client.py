@@ -10,8 +10,7 @@ from tornado import simple_httpclient
 from tornado.ioloop import IOLoop
 from tornado import httpclient, httputil
 from tornado.concurrent import TracebackFuture
-from tornado.netutil import Resolver
-from tornado.escape import native_str
+from tornado.tcpclient import TCPClient
 
 
 class EventSourceError(Exception):
@@ -42,10 +41,10 @@ class EventSourceClient(simple_httpclient._HTTPConnection):
         self.read_queue = collections.deque()
         self.events = []
 
-        self.resolver = Resolver(io_loop=io_loop)
+        self.tcp_client = TCPClient(io_loop=io_loop)
         super(EventSourceClient, self).__init__(
             io_loop, None, request, lambda: None, self._on_http_response,
-            104857600, self.resolver)
+            104857600, self.tcp_client, 65536)
 
     def _handle_event_stream(self):
         if self._timeout is not None:
@@ -62,15 +61,10 @@ class EventSourceClient(simple_httpclient._HTTPConnection):
                 self.connect_future.set_exception(EventSourceError(
                     "Non-websocket response"))
 
-    def _on_headers(self, data):
-        data = native_str(data.decode("latin1"))
-        first_line, _, header_data = data.partition("\n")
-        match = re.match("HTTP/1.[01] ([0-9]+) ([^\r]*)", first_line)
-        assert match
-        code = int(match.group(1))
-        self.headers = httputil.HTTPHeaders.parse(header_data)
-        self.code = code
-        self.reason = match.group(2)
+    def headers_received(self, data, headers):
+        self.headers = headers
+        self.code = data.code
+        self.reason = data.reason
 
         if "Content-Length" in self.headers:
             if "," in self.headers["Content-Length"]:
