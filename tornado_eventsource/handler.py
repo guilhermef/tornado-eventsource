@@ -55,14 +55,14 @@ class EventSourceHandler(tornado.web.RequestHandler):
             logging.exception('Stream Closed')
             self.close()
 
-    def write_message(self, name=None, msg=True, wait=None, id=None):
+    def write_message(self, name=None, msg=True, wait=None, evt_id=None):
         to_send = ""
         if wait:
             to_send += "\nretry: %s" % wait
         if name:
             to_send += """\nevent: {name}""".format(name=name)
-        if id:
-            to_send += """\nid: {id}""".format(id=id)
+        if evt_id:
+            to_send += """\nid: {evt_id}""".format(evt_id=evt_id)
         if isinstance(msg, str) or isinstance(msg, unicode):
             for line in msg.splitlines(False):
                 to_send += """\ndata: {msg}""".format(msg=line)
