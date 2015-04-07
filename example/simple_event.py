@@ -12,7 +12,7 @@ class MainHandler(tornado_eventsource.handler.EventSourceHandler):
         self.heart_beat.start()
 
     def _simple_callback(self):
-        self.write_message(name="doge", msg="Wow much alive\nSuch message", id=uuid.uuid4())
+        self.write_message(name="doge", msg="Wow much alive\nSuch message", evt_id=uuid.uuid4())
         self.write_message(msg="Wow much nameless", id=uuid.uuid4())
 
 application = tornado.web.Application([
