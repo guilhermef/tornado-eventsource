@@ -1,8 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+import time
 
 import tornado.web
 import tornado.gen as gen
+from tornado import httputil
 from tornado.iostream import StreamClosedError
 import logging
 
@@ -24,6 +26,21 @@ class EventSourceHandler(tornado.web.RequestHandler):
     def check_connection(self):
         return True
 
+    def custom_headers(self):
+        return {}
+
+    def set_default_headers(self):
+        default_headers = {
+            "Server": "TornadoServer/%s" % tornado.version,
+            "Content-Type": "text/event-stream",
+            "access-control-allow-origin": "*",
+            "connection": "keep-alive",
+            "Transfer-Encoding": 'identity',
+            "Date": httputil.format_timestamp(time.time()),
+        }
+        default_headers.update(self.custom_headers())
+        self._headers = httputil.HTTPHeaders(default_headers)
+
     @gen.coroutine
     def _execute(self, transforms, *args, **kwargs):
         if not self.check_connection():
@@ -33,10 +50,13 @@ class EventSourceHandler(tornado.web.RequestHandler):
         self.open_kwargs = dict((k, self.decode_argument(v, name=k))
                                 for (k, v) in kwargs.items())
 
+        start_line = httputil.ResponseStartLine('',
+                                                self._status_code,
+                                                self._reason)
         # EventSource only supports GET method
         if self.request.method != 'GET':
-            return self.error(405, 'Method Not Allowed')
-        self._write("HTTP/1.1 200 OK\r\ncontent-type: text/event-stream\r\naccess-control-allow-origin: *\r\nconnection: keep-alive\r\n\r\n")
+            self.error(405, 'Method Not Allowed')
+        yield self.request.connection.write_headers(start_line, self._headers)
 
         self.open(*self.open_args, **self.open_kwargs)
 

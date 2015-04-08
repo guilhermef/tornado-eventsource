@@ -10,10 +10,14 @@ class MainHandler(tornado_eventsource.handler.EventSourceHandler):
         ioloop = tornado.ioloop.IOLoop.instance()
         self.heart_beat = tornado.ioloop.PeriodicCallback(self._simple_callback, 5000, ioloop)
         self.heart_beat.start()
+        print 'Connection open'
+
+    def close(self):
+        print 'Connection closed'
 
     def _simple_callback(self):
         self.write_message(name="doge", msg="Wow much alive\nSuch message", evt_id=uuid.uuid4())
-        self.write_message(msg="Wow much nameless", id=uuid.uuid4())
+        self.write_message(msg="Wow much nameless", evt_id=uuid.uuid4())
 
 application = tornado.web.Application([
     (r"/", MainHandler),

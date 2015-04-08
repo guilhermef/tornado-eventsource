@@ -30,6 +30,17 @@ class PostMessageTest(EventSourceTestCase):
         response = self.fetch('/forbidden', method='GET')
         self.assertEqual(response.code, 403)
 
+    def test_should_set_custom_headers(self):
+        event_source = eventsource_connect(url=self.get_url('/'), callback=self.stop)
+        self.wait()
+        headers = event_source.result().headers
+
+        self.assertEqual(headers['Transfer-Encoding'], 'identity')
+        self.assertEqual(headers['Connection'], 'keep-alive')
+        self.assertEqual(headers['Access-Control-Allow-Origin'], '*')
+        self.assertEqual(headers['Content-Type'], 'text/event-stream')
+        self.assertEqual(headers['X-doge-header'], 'much head')
+
     def test_get_message_on_open(self):
         event_source = eventsource_connect(url=self.get_url('/'), callback=self.stop)
         self.wait()

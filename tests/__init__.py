@@ -8,6 +8,9 @@ from tornado_eventsource.handler import EventSourceHandler
 
 
 class EventSourceTestHandler(EventSourceHandler):
+    def custom_headers(self):
+        return {'X-doge-header': 'much head'}
+
     def open(self):
         self.write_message('doge_source', 'much connection')
 

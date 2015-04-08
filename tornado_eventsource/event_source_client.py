@@ -66,6 +66,9 @@ class EventSourceClient(simple_httpclient._HTTPConnection):
         self.code = data.code
         self.reason = data.reason
 
+        if self.headers['Content-Type'] != 'text/event-stream':
+            raise ValueError("Invalid headers: %s" % self.headers)
+
         if "Content-Length" in self.headers:
             if "," in self.headers["Content-Length"]:
                 pieces = re.split(r',\s*', self.headers["Content-Length"])
