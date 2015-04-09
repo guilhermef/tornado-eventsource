@@ -38,8 +38,7 @@ Using the client for test:
     from tornado_eventsource.event_source_client import eventsource_connect
 
     ...
-
-    @gen_test
+    
     def test_get_message_on_open(self):
         event_source = eventsource_connect(url=self.get_url('/'), callback=self.stop)
         self.wait()
