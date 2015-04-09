@@ -17,11 +17,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
         self.stream = request.connection.stream
 
     def error(self, status, msg=None):
-        self._write(
-            "HTTP/1.1 %s %s\r\n\r\n" % (status, msg)
-        )
-        self.stream.close()
-        return
+        raise tornado.web.HTTPError(status)
 
     def check_connection(self):
         return True
@@ -35,30 +31,17 @@ class EventSourceHandler(tornado.web.RequestHandler):
             "Content-Type": "text/event-stream",
             "access-control-allow-origin": "*",
             "connection": "keep-alive",
-            "Transfer-Encoding": 'identity',
             "Date": httputil.format_timestamp(time.time()),
         }
         default_headers.update(self.custom_headers())
         self._headers = httputil.HTTPHeaders(default_headers)
 
-    @gen.coroutine
-    def _execute(self, transforms, *args, **kwargs):
-        if not self.check_connection():
-            return
+    @tornado.web.asynchronous
+    def get(self, *args, **kwargs):
+        self.check_connection()
 
-        self.open_args = [self.decode_argument(arg) for arg in args]
-        self.open_kwargs = dict((k, self.decode_argument(v, name=k))
-                                for (k, v) in kwargs.items())
-
-        start_line = httputil.ResponseStartLine('',
-                                                self._status_code,
-                                                self._reason)
-        # EventSource only supports GET method
-        if self.request.method != 'GET':
-            self.error(405, 'Method Not Allowed')
-        yield self.request.connection.write_headers(start_line, self._headers)
-
-        self.open(*self.open_args, **self.open_kwargs)
+        self.open(*args, **kwargs)
+        self.flush()
 
     def open(self, *args, **kwargs):
         pass
@@ -66,11 +49,13 @@ class EventSourceHandler(tornado.web.RequestHandler):
     def close(self):
         pass
 
+    @gen.coroutine
     def _write(self, message):
         if self.stream.closed():
             return
         try:
-            self.stream.write(tornado.escape.utf8(message))
+            self.write(message)
+            yield self.flush()
         except StreamClosedError:
             logging.exception('Stream Closed')
             self.close()
