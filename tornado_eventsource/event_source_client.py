@@ -88,7 +88,6 @@ class EventSourceClient(simple_httpclient._HTTPConnection):
         """
         logging.debug("handle_stream(...)")
 
-        # import ipdb; ipdb.set_trace()
         event = Event()
         for line in message.strip().splitlines():
             (field, value) = line.split(":", 1)
@@ -135,7 +134,6 @@ def eventsource_connect(url, io_loop=None, callback=None, connect_timeout=None):
         # AsyncHTTPClient.fetch)
         request.headers = httputil.HTTPHeaders(request.headers)
     else:
-        # import ipdb; ipdb.set_trace()
         request = httpclient.HTTPRequest(
             url,
             connect_timeout=connect_timeout,
