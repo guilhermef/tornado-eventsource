@@ -10,11 +10,23 @@ from tornado import simple_httpclient
 from tornado.ioloop import IOLoop
 from tornado import httpclient, httputil
 from tornado.concurrent import TracebackFuture
-from tornado.tcpclient import TCPClient
+try:
+    from tornado.tcpclient import TCPClient
+    old_tornado = False
+except ImportError:
+    old_tornado = True
+    from tornado.netutil import Resolver
+    from tornado.escape import native_str
 
 
 class EventSourceError(Exception):
     pass
+
+
+class HeadersData(object):
+    def __init__(self, code, reason):
+        self.code = code
+        self.reason = reason
 
 
 class Event(object):
@@ -41,10 +53,16 @@ class EventSourceClient(simple_httpclient._HTTPConnection):
         self.read_queue = collections.deque()
         self.events = []
 
-        self.tcp_client = TCPClient(io_loop=io_loop)
-        super(EventSourceClient, self).__init__(
-            io_loop, None, request, lambda: None, self._on_http_response,
-            104857600, self.tcp_client, 65536)
+        if old_tornado:
+            self.resolver = Resolver(io_loop=io_loop)
+            super(EventSourceClient, self).__init__(
+                io_loop, None, request, lambda: None, self._on_http_response,
+                104857600, self.resolver)
+        else:
+            self.tcp_client = TCPClient(io_loop=io_loop)
+            super(EventSourceClient, self).__init__(
+                io_loop, None, request, lambda: None, self._on_http_response,
+                104857600, self.tcp_client, 65536)
 
     def _handle_event_stream(self):
         if self._timeout is not None:
@@ -60,6 +78,16 @@ class EventSourceClient(simple_httpclient._HTTPConnection):
             else:
                 self.connect_future.set_exception(EventSourceError(
                     "Non-websocket response"))
+
+    def _on_headers(self, data):
+        data = native_str(data.decode("latin1"))
+        first_line, _, header_data = data.partition("\n")
+        match = re.match("HTTP/1.[01] ([0-9]+) ([^\r]*)", first_line)
+        assert match
+        code = int(match.group(1))
+        headers = httputil.HTTPHeaders.parse(header_data)
+        reason = match.group(2)
+        self.headers_received(HeadersData(code=code, reason=reason), headers)
 
     def headers_received(self, data, headers):
         self.headers = headers

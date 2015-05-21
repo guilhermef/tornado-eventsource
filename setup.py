@@ -26,7 +26,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'tornado>=4.1.0'
+        'tornado>=3.2.0,<4.0'
     ],
 
     extras_require={
