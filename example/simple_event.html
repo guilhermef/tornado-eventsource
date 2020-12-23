@@ -2,19 +2,25 @@
 <html>
 <head>
   <title>Simple Event</title>
-
-  <script>
-    var evtSource = new EventSource("http://localhost:8888/");
-    evtSource.onmessage = function(e) {
-      console.log(e.lastEventId);
-      console.log(e.data);
-    };
-    evtSource.addEventListener("doge", function(e) {
-      console.log(e);
-    }, false);
-  </script>
 </head>
 <body>
+<ul id="message-list">
+</ul>
+<script>
+  var appendEvent = function (source, e, ul) {
+    var li = document.createElement('li');
+    li.innerHTML = "<div>event name: " + source + "</div> <div> Message: " + e.data + "</div>";
+    ul.appendChild(li);
+  };
 
+  var evtSource = new EventSource("http://localhost:8888/");
+  var ul = document.querySelector("ul");
+  evtSource.onmessage = function (e) {
+    appendEvent("missing", e, ul)
+  };
+  evtSource.addEventListener("doge", function (e) {
+    appendEvent("doge", e, ul)
+  }, false);
+</script>
 </body>
 </html>

@@ -1,4 +1,6 @@
 import uuid
+import datetime
+import json
 
 import tornado.ioloop
 import tornado.web
@@ -10,7 +12,7 @@ class MainHandler(tornado_eventsource.handler.EventSourceHandler):
         ioloop = tornado.ioloop.IOLoop.instance()
         self.heart_beat = tornado.ioloop.PeriodicCallback(self._simple_callback, 5000, ioloop)
         self.heart_beat.start()
-        self.write_message(msg="Wow much nameless", evt_id=uuid.uuid4())
+        self._simple_callback()
         print('Connection open')
 
     def close(self):
@@ -18,7 +20,10 @@ class MainHandler(tornado_eventsource.handler.EventSourceHandler):
 
     def _simple_callback(self):
         self.write_message(name="doge", msg="Wow much alive\nSuch message", evt_id=uuid.uuid4())
-        self.write_message(msg="Wow much nameless", evt_id=uuid.uuid4())
+        self.write_message(msg=json.dumps({
+            "timestamp": datetime.datetime.now().isoformat(),
+            "json_message": "message",
+        }), evt_id=uuid.uuid4())
 
 application = tornado.web.Application([
     (r"/", MainHandler),
