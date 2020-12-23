@@ -60,7 +60,7 @@ class EventSourceTestHandlerWithMultilineMessage(EventSourceHandler):
         }
 
     def open(self):
-        self.write_message(msg='such Wow\nmuch multi')
+        self.write_message(msg='such Wow\\nmuch multi')
 
 
 class EventSourceTestCase(AsyncHTTPTestCase):

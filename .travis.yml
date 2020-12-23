@@ -1,12 +1,21 @@
 language: python
 
 python:
-    - 2.6
-    - 2.7
-    - pypy
+    - "3.6"
+    - "3.7"
+    - "3.8"
+    - "3.9"
+    - pypy3
 
 install:
     - make setup
 
 script:
     - make test
+
+deploy:
+    provider: pypi
+    username: "__token__"
+    password: $PYPI_TOKEN
+    on:
+        tags: true

@@ -75,4 +75,4 @@ class PostMessageTest(EventSourceTestCase):
         self.wait()
         event = event_source.result().events[0]
         self.assertEqual(event.name, None)
-        self.assertEqual(event.data, 'such Wow\nmuch multi')
+        self.assertEqual(event.data, 'such Wow\\nmuch multi')
