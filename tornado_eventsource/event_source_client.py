@@ -40,7 +40,7 @@ class Event(object):
         self.retry = None
 
     def __repr__(self):
-        return "Event<%s,%s,%s>" % (str(self.id), str(self.name), str(self.data.replace("\n", "\\n")))
+        return "Event<%s,%s,%s>" % (str(self.id), str(self.name), str(self.data))
 
 
 class EventSourceClient(simple_httpclient._HTTPConnection):
@@ -117,7 +117,7 @@ class EventSourceClient(simple_httpclient._HTTPConnection):
         logging.debug("handle_stream(...)")
 
         event = Event()
-        for line in message.strip().splitlines():
+        for line in message.decode().strip().splitlines():
             (field, value) = line.split(":", 1)
             field = field.strip()
 
@@ -128,7 +128,7 @@ class EventSourceClient(simple_httpclient._HTTPConnection):
                 if event.data is None:
                     event.data = value
                 else:
-                    event.data = "%s\n%s" % (event.data, value)
+                    event.data = f"{event.data}\n{value}"
             elif field == "id":
                 event.id = value.lstrip()
                 self.last_event_id = event.id

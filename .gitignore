@@ -33,6 +33,8 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+/man/
+pyvenv.cfg
 
 # Translations
 *.mo

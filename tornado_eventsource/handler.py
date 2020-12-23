@@ -63,16 +63,15 @@ class EventSourceHandler(tornado.web.RequestHandler):
     def write_message(self, name=None, msg=True, wait=None, evt_id=None):
         to_send = ""
         if wait:
-            to_send += "\nretry: %s" % wait
+            to_send += f"\nretry: {wait}"
         if name:
-            to_send += """\nevent: {name}""".format(name=name)
+            to_send += f"""\nevent: {name}"""
         if evt_id:
-            to_send += """\nid: {evt_id}""".format(evt_id=evt_id)
-        if isinstance(msg, str) or isinstance(msg, unicode):
+            to_send += f"""\nid: {evt_id}"""
             for line in msg.splitlines(False):
-                to_send += """\ndata: {msg}""".format(msg=line)
+                to_send += f"""\ndata: {line}"""
         else:
-            to_send += """\ndata: {msg}""".format(msg=msg)
+            to_send += f"""\ndata: {msg}"""
         to_send += "\n\n"
         logging.debug(to_send)
         self._write(to_send)

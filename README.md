@@ -1,8 +1,7 @@
 tornado-eventsource
 ===================
 
-[![Dependency Status](https://gemnasium.com/guilhermef/tornado-eventsource.svg)](https://gemnasium.com/guilhermef/tornado-eventsource)
-[![Build Status](https://travis-ci.org/guilhermef/tornado-eventsource.svg?branch=master)](https://travis-ci.org/guilhermef/tornado-eventsource)
+[![Build Status](https://travis-ci.com/guilhermef/tornado-eventsource.svg?branch=master)](https://travis-ci.com/guilhermef/tornado-eventsource)
 
 A simple EventSource handler for tornado.
 With a built-in client for testing.
@@ -31,20 +30,54 @@ On your handler:
         def close(self):
             # Cleanup after close
 
-[<img src="http://cdn.meme.am/instances/500x/57038109.jpg">](https://developer.mozilla.org/en-US/docs/Server-sent_events/Using_server-sent_events)
 
 Using the client for test:
 
     from tornado_eventsource.event_source_client import eventsource_connect
 
     ...
-    
+
     def test_get_message_on_open(self):
         event_source = eventsource_connect(url=self.get_url('/'), callback=self.stop)
         self.wait()
         event = event_source.result().events[0]
         self.assertEqual(event.name, 'doge_source')
         self.assertEqual(event.data, 'much connection')
+
+
+Another example:
+
+    import uuid
+
+    import tornado.ioloop
+    import tornado.web
+    import tornado_eventsource.handler
+
+
+    class MainHandler(tornado_eventsource.handler.EventSourceHandler):
+        def open(self):
+            ioloop = tornado.ioloop.IOLoop.instance()
+            self.heart_beat = tornado.ioloop.PeriodicCallback(self._simple_callback, 5000, ioloop)
+            self.heart_beat.start()
+            self.write_message(msg="Wow much nameless", evt_id=uuid.uuid4())
+            print('Connection open')
+
+        def close(self):
+            print('Connection closed')
+
+        def _simple_callback(self):
+            self.write_message(name="doge", msg="Wow much alive\nSuch message", evt_id=uuid.uuid4())
+            self.write_message(msg="Wow much nameless", evt_id=uuid.uuid4())
+
+    application = tornado.web.Application([
+        (r"/", MainHandler),
+    ], debug=True)
+
+    if __name__ == "__main__":
+        application.listen(8888)
+        tornado.ioloop.IOLoop.instance().start()
+
+
 
 Contribute
 ----------
