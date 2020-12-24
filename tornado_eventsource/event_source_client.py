@@ -5,6 +5,7 @@
 import logging
 import collections
 import re
+import datetime
 
 from tornado import simple_httpclient
 from tornado.ioloop import IOLoop
@@ -38,6 +39,9 @@ class Event(object):
         self.data = None
         self.id = None
         self.retry = None
+        self.timestamp = int(
+            datetime.datetime.utcnow().timestamp() * 1000
+        )
 
     def __repr__(self):
         return "Event<%s,%s,%s>" % (str(self.id), str(self.name), str(self.data))
