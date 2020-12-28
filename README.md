@@ -15,6 +15,8 @@ Install it(duh!):
 
     pip install tornado_eventsource
 
+[Client/Server example](https://github.com/guilhermef/tornado-eventsource/tree/master/example)
+
 On your handler:
 
     class MyAmazingHandler(EventSourceHandler):
@@ -56,8 +58,7 @@ Another example:
 
     class MainHandler(tornado_eventsource.handler.EventSourceHandler):
         def open(self):
-            ioloop = tornado.ioloop.IOLoop.instance()
-            self.heart_beat = tornado.ioloop.PeriodicCallback(self._simple_callback, 5000, ioloop)
+            self.heart_beat = tornado.ioloop.PeriodicCallback(self._simple_callback, 5000)
             self.heart_beat.start()
             self.write_message(msg="Wow much nameless", evt_id=uuid.uuid4())
             print('Connection open')
