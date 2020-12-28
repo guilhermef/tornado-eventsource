@@ -11,14 +11,6 @@ from mock import patch
 
 class PostMessageTest(EventSourceTestCase):
 
-    def test_returns_405_if_post(self):
-        response = self.fetch('/', method='POST', body='a')
-        self.assertEqual(response.code, 405)
-
-    def test_returns_405_if_put(self):
-        response = self.fetch('/', method='PUT', body='a')
-        self.assertEqual(response.code, 405)
-
     @patch('tornado.iostream.IOStream.write')
     def test_stream_closed_error(self, write_mock):
         write_mock.side_effect = StreamClosedError

@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import time
+import asyncio
 
 import tornado.web
 import tornado.gen as gen
@@ -12,8 +13,7 @@ import logging
 class EventSourceHandler(tornado.web.RequestHandler):
 
     def __init__(self, application, request, **kwargs):
-        tornado.web.RequestHandler.__init__(self, application, request,
-                                            **kwargs)
+        super().__init__(application, request, **kwargs)
         self.stream = request.connection.stream
 
     def error(self, status, msg=None):
@@ -30,18 +30,22 @@ class EventSourceHandler(tornado.web.RequestHandler):
             "Server": "TornadoServer/%s" % tornado.version,
             "Content-Type": "text/event-stream",
             "access-control-allow-origin": "*",
-            "connection": "keep-alive",
+            "Connection": "keep-alive",
             "Date": httputil.format_timestamp(time.time()),
         }
         default_headers.update(self.custom_headers())
         self._headers = httputil.HTTPHeaders(default_headers)
 
-    @tornado.web.asynchronous
-    def get(self, *args, **kwargs):
+    async def wait_for_stream_close(self):
+        while not self.stream.closed():
+            await asyncio.sleep(10)
+
+    async def get(self, *args, **kwargs):
         self.check_connection()
 
         self.open(*args, **kwargs)
-        self.flush()
+
+        await self.wait_for_stream_close()
 
     def open(self, *args, **kwargs):
         pass
@@ -49,13 +53,12 @@ class EventSourceHandler(tornado.web.RequestHandler):
     def close(self):
         pass
 
-    @gen.coroutine
     def _write(self, message):
         if self.stream.closed():
             return
         try:
             self.write(message)
-            yield self.flush()
+            return self.flush()
         except StreamClosedError:
             logging.exception('Stream Closed')
             self.close()
@@ -74,7 +77,7 @@ class EventSourceHandler(tornado.web.RequestHandler):
             to_send += f"""\ndata: {msg}"""
         to_send += "\n\n"
         logging.debug(to_send)
-        self._write(to_send)
+        return self._write(to_send)
 
     def on_connection_close(self):
         self.stream.close()

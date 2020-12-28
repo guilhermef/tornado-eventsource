@@ -6,18 +6,15 @@ import logging
 import collections
 import re
 import datetime
+import asyncio
 
 from tornado import simple_httpclient
 from tornado.ioloop import IOLoop
 from tornado import httpclient, httputil
-from tornado.concurrent import TracebackFuture
-try:
-    from tornado.tcpclient import TCPClient
-    old_tornado = False
-except ImportError:
-    old_tornado = True
-    from tornado.netutil import Resolver
-    from tornado.escape import native_str
+from tornado.tcpclient import TCPClient
+
+from typing import cast
+
 
 
 class EventSourceError(Exception):
@@ -51,28 +48,29 @@ class EventSourceClient(simple_httpclient._HTTPConnection):
     """
     This module opens a new connection to an eventsource server, and wait for events.
     """
-    def __init__(self, io_loop, request):
-        self.connect_future = TracebackFuture()
+    def __init__(self, request):
+        self.connect_future = asyncio.Future()
         self.read_future = None
         self.read_queue = collections.deque()
         self.events = []
 
-        if old_tornado:
-            self.resolver = Resolver(io_loop=io_loop)
-            super(EventSourceClient, self).__init__(
-                io_loop, None, request, lambda: None, self._on_http_response,
-                104857600, self.resolver)
-        else:
-            self.tcp_client = TCPClient(io_loop=io_loop)
-            super(EventSourceClient, self).__init__(
-                io_loop, None, request, lambda: None, self._on_http_response,
-                104857600, self.tcp_client, 65536)
+        self.tcp_client = TCPClient()
+        super().__init__(
+            None,
+            request,
+            lambda: None,
+            self._on_http_response,
+            104857600,
+            self.tcp_client,
+            65536,
+            104857600,
+        )
 
-    def _handle_event_stream(self):
+    async def _handle_event_stream(self):
         if self._timeout is not None:
             self.io_loop.remove_timeout(self._timeout)
             self._timeout = None
-        self.stream.read_until_regex(b"\n\n", self.handle_stream)
+        self.handle_stream(await self.stream.read_until_regex(b"\n\n"))
         self.connect_future.set_result(self)
 
     def _on_http_response(self, response):
@@ -93,7 +91,7 @@ class EventSourceClient(simple_httpclient._HTTPConnection):
         reason = match.group(2)
         self.headers_received(HeadersData(code=code, reason=reason), headers)
 
-    def headers_received(self, data, headers):
+    async def headers_received(self, data, headers):
         self.headers = headers
         self.code = data.code
         self.reason = data.reason
@@ -109,7 +107,7 @@ class EventSourceClient(simple_httpclient._HTTPConnection):
                                      self.headers["Content-Length"])
                 self.headers["Content-Length"] = pieces[0]
 
-        self._handle_event_stream()
+        await self._handle_event_stream()
 
     def handle_stream(self, message):
         """
@@ -150,15 +148,13 @@ class EventSourceClient(simple_httpclient._HTTPConnection):
         self.events.append(event)
 
 
-def eventsource_connect(url, io_loop=None, callback=None, connect_timeout=None):
+def eventsource_connect(url, callback=None, connect_timeout=None):
     """Client-side eventsource support.
 
     Takes a url and returns a Future whose result is a
     `EventSourceClient`.
 
     """
-    if io_loop is None:
-        io_loop = IOLoop.current()
     if isinstance(url, httpclient.HTTPRequest):
         assert connect_timeout is None
         request = url
@@ -167,15 +163,18 @@ def eventsource_connect(url, io_loop=None, callback=None, connect_timeout=None):
         request.headers = httputil.HTTPHeaders(request.headers)
     else:
         request = httpclient.HTTPRequest(
-            url,
+            url=url,
             connect_timeout=connect_timeout,
             headers=httputil.HTTPHeaders({
-                "Accept-Encoding": "identity"
+                "Accept-Encoding": "identity",
+                "Connection": "keep-alive",
             })
         )
-    request = httpclient._RequestProxy(
-        request, httpclient.HTTPRequest._DEFAULTS)
-    conn = EventSourceClient(io_loop, request)
+    request = cast(
+        httpclient.HTTPRequest,
+        httpclient._RequestProxy(request, httpclient.HTTPRequest._DEFAULTS),
+    )
+    conn = EventSourceClient(request)
     if callback is not None:
-        io_loop.add_future(conn.connect_future, callback)
+        IOLoop.current().add_future(conn.connect_future, callback)
     return conn.connect_future

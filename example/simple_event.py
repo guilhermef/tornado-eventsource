@@ -9,8 +9,7 @@ import tornado_eventsource.handler
 
 class MainHandler(tornado_eventsource.handler.EventSourceHandler):
     def open(self):
-        ioloop = tornado.ioloop.IOLoop.instance()
-        self.heart_beat = tornado.ioloop.PeriodicCallback(self._simple_callback, 5000, ioloop)
+        self.heart_beat = tornado.ioloop.PeriodicCallback(self._simple_callback, 5000)
         self.heart_beat.start()
         self._simple_callback()
         print('Connection open')
