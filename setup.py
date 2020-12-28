@@ -3,6 +3,8 @@
 
 
 from setuptools import setup, find_packages
+from os import path
+
 from tornado_eventsource import __version__
 
 tests_require = [
@@ -11,11 +13,17 @@ tests_require = [
     'mock'
 ]
 
+
+this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
+
 setup(
     name='tornado_eventsource',
     version=__version__,
     description="EventSource handler for tornado",
-    long_description="A simple EventSource handler for tornado",
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     keywords='tornado EventSource event source',
     author='Guilherme Souza',
     author_email='guivideojob@gmail.com',
